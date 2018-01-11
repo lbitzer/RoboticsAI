@@ -1,5 +1,7 @@
-import math
 import numpy as np
+import math
+import matplotlib.pyplot as plt
+from matplotlib.ticker import AutoMinorLocator
 
 cubeDict = {'BPortal0': 5, 'BPortal1' : 6, 'BPyramid' : 10, 'BLine' : 6, 'RPortal0' : 5, 'RPortal1' : 6, 'RPyramid' : 10, 'RLine' : 6}
 objDict = {'ScaleB': 0, 'ScaleR' : 0, 'BSwitchB' : 0, 'BSwitchR' : 0, 'RSwitchB' : 0, 'RSwitchR' : 0} #For Switches first 'R' of 'B' is side of field, second 'R' or 'B' is side of switch 
@@ -71,18 +73,29 @@ R0 = Robot(RID = [1, 0])
 R1 = Robot(RID = [1, 1])
 R2 = Robot(RID = [1, 2])
 RobotList = [B0, B1, B2, R0, R1, R2]
+field = plt.imread('Field.png')
+fig, ax = plt.subplots()
+ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+ax.xaxis.set_minor_locator(AutoMinorLocator(5))
+ax.imshow(field, extent = [0, 648, 0 , 320])
+ax.grid(color='black', which='both', linestyle='-', linewidth=.1)
 
 if __name__ == "__main__": # Start Here
-  for time in range(gameLength): #The code that runs each second
-    for robot in RobotList: 
-      vector, fieldChange = Strategy0(robot)
-      coordinates = convertToRect(vector[0], vector[1])
-      for index in range(len(robot.location)): #Changes robot location
-        robot.location[index] = robot.location[index] + coordinates[index]
-      if fieldChange[0] != '': #Changes field element dictionaries
-        objDict[fieldChange[0]] += 1
-      if fieldChange[1] != '':
-        cubeDict[fieldChange[1]]
-  
-  print('Done')
+	for time in range(gameLength): #The code that runs each second
+		for robot in RobotList: 
+			vector, fieldChange = Strategy0(robot)
+			coordinates = convertToRect(vector[0], vector[1])
+			print(coordinates)
+			for index in range(len(robot.location)): #Changes robot location
+				robot.location[index] = robot.location[index] + coordinates[index]
+			if fieldChange[0] != '': #Changes field element dictionaries
+				objDict[fieldChange[0]] += 1
+			if fieldChange[1] != '':
+				cubeDict[fieldChange[1]]
+	plt.show()
+
+	print('Done')
     
+
+
+
