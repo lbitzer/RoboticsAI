@@ -3,30 +3,25 @@ import math
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 
-cubeDict = {'BPortal0': 5, 'BPortal1' : 6, 'BPyramid' : 10, 'BLine' : 6, 'RPortal0' : 5, 'RPortal1' : 6, 'RPyramid' : 10, 'RLine' : 6}
-objDict = {'ScaleB': 0, 'ScaleR' : 0, 'BSwitchB' : 0, 'BSwitchR' : 0, 'RSwitchB' : 0, 'RSwitchR' : 0} #For Switches first 'R' of 'B' is side of field, second 'R' or 'B' is side of switch 
-mainStartingLocationsB = [[648, 80], [648, 160], [648, 240]]
-mainStartingLocationsR = [[0, 80], [0, 160], [0, 240]]
+cubeStateDict = {'BPortal0': 5, 'BPortal1' : 6, 'BPyramid' : 10, 'BLine' : 6, 'RPortal0' : 5, 'RPortal1' : 6, 'RPyramid' : 10, 'RLine' : 6}
+objStateDict = {'ScaleB': 0, 'ScaleR' : 0, 'BSwitchB' : 0, 'BSwitchR' : 0, 'RSwitchB' : 0, 'RSwitchR' : 0} #For Switches first 'R' of 'B' is side of field, second 'R' or 'B' is side of switch 
+#Locations are used for both Blue and Red Elements, but for Blue Elements the x coordinate i subtracted from 648 (except for line since either team can take from there)
+cubeLocationDict = {'Portal0' : [636, 308], 'Portal1' : [8, 636], 'Pyramid' : [88, 160], 'RLine' : [208, 160], 'BLine' : } #0 is Top Portal
+objLocationDict = {'ScaleTop': 0, 'ScaleBottom' : 0, 'CloseSwitchTop' : 0, 'CloseSwitchTop' : 0, 'FarSwitchTop' : 0, 'FarSwitchBottom' : 0}
+mainStartingLocations = [[0, 80], [0, 160], [0, 240]]
 gameLength = 10 #seconds
 
 
 class Robot:
-  RID = None #RID = Robot ID in form [a,b] where a is team(Blue = 0, Red = 1) and a is bot id(0, 1, or 2)
-  robotSpeed = None #inches per second
-  scaleSpeed = None #seconds
-  switchSpeed = None #seconds
-  pickUpSpeed = None #seconds
-  location = None #Cartesian Coordinate System
-  hasCube = None #Boolean has cube
   name = "" #name of the robot
   
   def __init__(self, RID, robotSpeed = 120, scaleSpeed = 6, switchSpeed = 3, pickUpSpeed = 2, hasCube = False): #contructor, 
-    self.RID = RID
-    self.robotSpeed = robotSpeed
-    self.scaleSpeed = scaleSpeed
-    self.switchSpeed = switchSpeed
-    self.pickUpSpeed = pickUpSpeed
-    self.hasCube = hasCube
+    self.RID = RID #RID = Robot ID in form [a,b] where a is team(Blue = 0, Red = 1) and a is bot id(0, 1, or 2)
+    self.robotSpeed = robotSpeed #inches per second
+    self.scaleSpeed = scaleSpeed #seconds
+    self.switchSpeed = switchSpeed #seconds
+    self.pickUpSpeed = pickUpSpeed #seconds
+    self.hasCube = hasCube #Boolean has cube
     if RID[0] == 0:
       self.location = mainStartingLocationsB[RID[1]]
     else:
@@ -50,21 +45,22 @@ def convertToRect(r, a): # radius, a = angle (radians)
 
 
 def pathfinding(CLocation, TLocation): #CLocation = CurrentLocation, TLocation = TargetLocation
-  slope = (TLocation[1] - CLocation[1]) / (TLocation[0] - CLocation[0])
-  angle = math.tan()
+  return [0, 0] * abs(TLocation - CLocation)
 
   
 def Strategy0(robot): #returns list [d, theta, ObjChange, CubeChange]
-#  if robot.HasCube != True:
-#    for cubelocation in CubeDict:
-#      robotlocation = robot.location
-#      while robotlocation != cubelocation:
-#        vector = pathfinding(robotlocation, cubelocation)
-#        for i in len(robotlocation):
-#          robotlocation[i] = robotlocation[i] + vector[i]  
-#  else:
-#    print("I have a cube")
-  coordinateChange = [12, 0]
+  if robot.HasCube != True:
+    closestCube = None
+    #testing each cube and finding the closest one
+    for cubeLocation in CubeLocationDict:
+      stepsList = pathfinding(robot.location, cubelocation.values)
+      distance = len(stepsList)
+      if distance > closestcube.values:
+        closestCube = cubeLocation
+    directions = pathfinding(robot.location, closestCube.values)
+ else:
+   print("I have a cube")
+  coordinateChange = [robot.robotSpeed, 0]
   objChange = 'ScaleR'
   cubeChange = ''
   fieldChange = [objChange, cubeChange]
@@ -92,6 +88,12 @@ ax.grid(color='black', which='both', linestyle='-', linewidth=.05) #add grid
 #minor ticks are every 18" and major ticks are every 72"
 
 for time in range(gameLength): #The code that runs each second
+  print([robot.location for robot in RobotList])
+  if 'red' in globals(): red.remove()
+  if 'blue' in globals(): blue.remove()
+
+  red = ax.scatter([robot.location[0] + 2 for robot in RobotList[3:]], [robot.location[1] + 2 for robot in RobotList[3:]], s = 3, c = 'red')
+  blue = ax.scatter([robot.location[0] - 2 for robot in RobotList[:3]], [robot.location[1] - 2 for robot in RobotList[:3]], s = 3, c = 'blue'); plt.pause(0.01)
   for robot in RobotList:
     vector, fieldChange = Strategy0(robot) #get the projected movement vector and projected changes to field elements
     coordinates = convertToRect(vector[0], vector[1]) #covert polar vector to rectangular
@@ -102,14 +104,10 @@ for time in range(gameLength): #The code that runs each second
       if robot.RID[0] == 0:
         robot.location[index] = robot.location[index] - coordinates[index]
     if fieldChange[0] != '': #Changes field element dictionaries
-      objDict[fieldChange[0]] += 1
+      objStateDict[fieldChange[0]] += 1
     if fieldChange[1] != '':
-      cubeDict[fieldChange[1]]
-    if 'sca' in globals(): sca.remove()
-  print([robot.location for robot in RobotList])
-  ax.scatter([robot.location[0] + 2 for robot in RobotList[3:]], [robot.location[1] + 2 for robot in RobotList[3:]], s = 3, c = 'red')
-  ax.scatter([robot.location[0] - 2 for robot in RobotList[:3]], [robot.location[1] - 2 for robot in RobotList[:3]], s = 3, c = 'blue'); plt.pause(.0001)
-
+      cubeStateDict[fieldChange[1]]
+  
 plt.ioff(); plt.show()
     
 
