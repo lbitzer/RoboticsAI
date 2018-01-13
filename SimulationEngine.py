@@ -6,7 +6,7 @@ from matplotlib.ticker import AutoMinorLocator
 cubeStateDict = {'BPortal0': 5, 'BPortal1' : 6, 'BPyramid' : 10, 'BLine' : 6, 'RPortal0' : 5, 'RPortal1' : 6, 'RPyramid' : 10, 'RLine' : 6}
 objStateDict = {'ScaleB': 0, 'ScaleR' : 0, 'BSwitchB' : 0, 'BSwitchR' : 0, 'RSwitchB' : 0, 'RSwitchR' : 0} #For Switches first 'R' of 'B' is side of field, second 'R' or 'B' is side of switch 
 #Locations are used for both Blue and Red Elements, but for Blue Elements the x coordinate i subtracted from 648 (except for line since either team can take from there)
-cubeLocationDict = {'Portal0' : [636, 308], 'Portal1' : [8, 636], 'Pyramid' : [88, 160], 'RLine' : [208, 160], 'BLine' : } #0 is Top Portal
+cubeLocationDict = {'Portal0' : [636, 308], 'Portal1' : [8, 636], 'Pyramid' : [88, 160], 'RLine' : [208, 160], 'BLine' : [432, 160]} #0 is Top Portal
 objLocationDict = {'ScaleTop': 0, 'ScaleBottom' : 0, 'CloseSwitchTop' : 0, 'CloseSwitchTop' : 0, 'FarSwitchTop' : 0, 'FarSwitchBottom' : 0}
 mainStartingLocations = [[0, 80], [0, 160], [0, 240]]
 gameLength = 10 #seconds
@@ -23,9 +23,9 @@ class Robot:
     self.pickUpSpeed = pickUpSpeed #seconds
     self.hasCube = hasCube #Boolean has cube
     if RID[0] == 0:
-      self.location = mainStartingLocationsB[RID[1]]
+      self.location = [648 - mainStartingLocations[RID[1]][0], mainStartingLocations[RID[1]][1]]
     else:
-      self.location = mainStartingLocationsR[RID[1]]
+      self.location = mainStartingLocations[RID[1]]
     if RID[0] == 0:
       self.name = self.name + 'B'
     elif RID[0] == 1:
@@ -49,17 +49,17 @@ def pathfinding(CLocation, TLocation): #CLocation = CurrentLocation, TLocation =
 
   
 def Strategy0(robot): #returns list [d, theta, ObjChange, CubeChange]
-  if robot.HasCube != True:
+  if robot.hasCube != True:
     closestCube = None
     #testing each cube and finding the closest one
-    for cubeLocation in CubeLocationDict:
-      stepsList = pathfinding(robot.location, cubelocation.values)
+    for cubeLocation in cubeLocationDict:
+      stepsList = pathfinding(robot.location, cubeLocation.values)
       distance = len(stepsList)
-      if distance > closestcube.values:
+      if distance > closestCube.values:
         closestCube = cubeLocation
     directions = pathfinding(robot.location, closestCube.values)
- else:
-   print("I have a cube")
+  else:
+    print("I have a cube")
   coordinateChange = [robot.robotSpeed, 0]
   objChange = 'ScaleR'
   cubeChange = ''
