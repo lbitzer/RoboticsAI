@@ -17,10 +17,10 @@ y = [10, 20, 30]
 
 
 
-for i in range(4):
+for i in range(10):
 	for j in range(len(x)):
 		x[j] = x[j] * (i + 1)
-	time.sleep(1)
-	fig.canvas.draw()
+	if 'sca' in globals(): sca.remove()
+	plt.scatter(x, y, s=200, lw=0, c='red', alpha=0.5); plt.pause(1)
 plt.show()
 #minor ticks are every 18" and major ticks are every 72"

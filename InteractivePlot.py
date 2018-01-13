@@ -1,36 +1,25 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import time
+from matplotlib.ticker import AutoMinorLocator
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
+X_BOUND = [0, 5]
 
-# some X and Y data
-x = [0]
-y = [0]
+plt.ion()
+field = plt.imread('Field.png') #get image
+fig, ax = plt.subplots() #make window
+ax.imshow(field, extent = [0, 648, 0 , 320]) #show image with dimensions 648 x 320
+ax.set_xticks(np.arange(0, 648, 48)) #customize tick intervals
+ax.set_yticks(np.arange(0, 320, 48))
+ax.yaxis.set_minor_locator(AutoMinorLocator(6)) #customize minor tick intervals
+ax.xaxis.set_minor_locator(AutoMinorLocator(6))
+ax.grid(color='black', which='both', linestyle='-', linewidth=.05) #add grid
 
-li, = ax.plot(x, y,'o')
 
-# draw and show it
-fig.canvas.draw()
-plt.show(block=False)
+F_values = [2,3,4,5,6,7,8,9]
+for i in range(10):
+	for j in range(len(F_values)):
+		F_values[j] = F_values[j] + i
+	if 'sca' in globals(): sca.remove()
+	sca = plt.scatter(F_values, F_values, s=3, lw=0, c='red', alpha=0.5); plt.pause(0.05)
 
-# loop to update the data
-for i in range(100):
-    try:
-        x.append(i)
-        y.append(i)
-
-        # set the new data
-        li.set_xdata(x)
-        li.set_ydata(y)
-
-        ax.relim() 
-        ax.autoscale_view(True,True,True) 
-
-        fig.canvas.draw()
-
-        time.sleep(0.01)
-    except KeyboardInterrupt:
-        plt.close('all')
-        break
+plt.ioff(); plt.show()
