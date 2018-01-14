@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 
 #set game length in seconds
-GAME_LENGTH = 10 #seconds
+GAME_LENGTH = 5 #seconds
 
 #randomizing switches and scales
 if np.random.randint(0, 2) == 0:
@@ -34,13 +34,13 @@ cube_state = {'RPortal0' : 5, 'RPortal1' : 6, 'RPyramid' : 10, 'RLine' : 6, 'BPo
 obj_state = {'RScale' : 0, 'BScale': 0, 'RSwitchR' : 0, 'RSwitchB' : 0, 'BSwitchR' : 0, 'BSwitchB' : 0}
 #Locations are used for both Blue and Red Teams, but for Blue Elements the x coordinate is subtracted from 648 (except for line since either team can take from there)
 cube_location = {'Portal0' : [636, 308], 'Portal1' : [8, 636], 'Pyramid' : [88, 160], 'RLine' : [208, 160], 'BLine' : [432, 160]} #0 is Top Portal
-obj_location = {'ScaleTop': 0, 'ScaleBottom' : 0, 'RedSwitchTop' : 0, 'RedSwitchBottom' : 0, 'BlueSwitchTop' : 0, 'BlueSwitchBottom' : 0}
+obj_location = {'ScaleTop': [320, 248], 'ScaleBottom' : [320, 68], 'RedSwitchTop' : [164, 236], 'RedSwitchBottom' : [164, 80], 'BlueSwitchTop' : [480, 236], 'BlueSwitchBottom' : [480, 80]}
 main_starting_locations = [[0, 80], [0, 160], [0, 240]]
 
 
 
 class Robot:
-  name = '' #name of the robot
+  team = '' #name of the robot
   task_timer = 0
   current_task = ''
   current_directions = []
@@ -51,19 +51,18 @@ class Robot:
     self.switch_speed = switch_speed #seconds
     self.pickup_speed = pickup_speed #seconds
     self.has_cube = has_cube #Boolean has cube
-    if RID[0] == 1:
-      self.location = [648 - main_starting_locations[RID[1]][0], main_starting_locations[RID[1]][1]]
-    else:
-      self.location = main_starting_locations[RID[1]]
+    #setting up staring locations
+    self.location = [RID[0] * 644 - main_starting_locations[RID[1]][0], main_starting_locations[RID[1]][1]]
+    
     if RID[0] == 0:
-      self.name = self.name + 'R'
+      self.team ='R'
+      self.enemy = 'B'
     elif RID[0] == 1:
-      self.name = self.name + '1'
+      self.team ='B'
+      self.enemy = 'R'
     else:
       raise ValueError('Value given for RID[0](team) was out of range')
-    if 0 <= RID[1] <= 2:
-      self.name = self.name + str(RID[1])
-    else:
+    if 0 >= RID[1] >= 2:
       raise ValueError('Value given for RID[1](robotID) is out of range')
   
 #Convert from polar to cartesian system
@@ -74,110 +73,125 @@ def convert_to_rect(r, a): # radius, a = angle (radians)
 
 #cube can be any of the keys in cube_location
 def get_cube_state(robot, cube): 
-  if robot.RID[0] == 0:
-    global_cube = 'R' + cube
-  if robot.RID[0] == 1:
-    global_cube = 'B' + cube
-  return cube_state[global_cube]
+  if cube != 'RLine' and cube != 'BLine':
+    if robot.RID[0] == 0:
+      global_cube = 'R' + cube
+    if robot.RID[0] == 1:
+      global_cube = 'B' + cube
+    return cube_state[global_cube]
+  else:
+    return cube_state[cube]
 #if set_cube_state returns zero this location is out of cubes and the robot did not receive a cube
 def set_cube_state(robot, cube):
-  if robot.RID[0] == 0:
-    global_cube = 'R' + cube
-  if robot.RID[0] == 1:
-    global_cube = 'B' + cube
-  if cube_state[global_cube] - 1 >= 0:
-    cube_state[global_cube] -= 1
-    return 0
+  if cube != 'Rline' and cube != "BLine":
+    if robot.RID[0] == 0:
+      global_cube = 'R' + cube
+    if robot.RID[0] == 1:
+      global_cube = 'B' + cube
+    if cube_state[global_cube] - 1 >= 0:
+      cube_state[global_cube] -= 1
+      return True
+    else:
+      return False
   else:
-    return 1
-
+    if cube_state[cube] -1 >= 0:
+      cube_state[cube] -= 1
+      return True
+    else:
+      return False
 #obj can be the string "Scale", ASwitch" for Allied Switch, or "OSwitch" for Opponent Switch; returns - state of allied side, state of opponent side
 def get_obj_state(robot, obj): 
-  if robot.RID[0] == 0:
-    if obj == "Scale":
-      return obj_state['RScale'], obj_state['BScale']
-    elif obj == "ASwitch":
-      return obj_state['RSwitchR'], obj_state['RSwitchB']
-    elif obj == "OSwitch":
-      return obj_state['BSwitchR'], obj_state['BSwitchB']
-    else:
-      rasie ValueError('Value given for obj is out of range(must be "Scale", "ASwitch" or "OSwitch")')
-  elif robot.RI[0] == 1:
-    if obj == "Scale":
-      return obj_state['BScale'], obj_state['RScale']
-    elif obj == "ASwitch":
-      return obj_state['BSwitchB'], obj_state['BSwitchR']
-    elif obj == "OSwitch":
-      return obj_state['RSwitchB'], obj_state['RSwitchR']
-    else:
-      rasie ValueError('Value given for obj is out of range(must be "Scale", "ASwitch" or "OSwitch")')
+  if obj == "Scale":
+    return obj_state[robot.team + 'Scale'], obj_state[robot.enemy + 'Scale']
+  elif obj == "ASwitch":
+    return obj_state[robot.team + 'Switch' + robot.team], obj_state[robot.team + 'Switch' + robot.enemy]
+  elif obj == "OSwitch":
+    return obj_state[robot.enemy + 'Switch' + robot.team], obj_state[robot.enemy + 'Switch' + robot.enemy]
+  else:
+    raise ValueError('Value given for obj is out of range(must be "Scale", "ASwitch" or "OSwitch")')
 
 def set_obj_state(robot, obj):
+  if obj == "Scale":
+    global_obj = obj_state[robot.team + 'Scale']
+  elif obj == "ASwitch":
+    global_obj = obj_state[robot.team + 'Switch' + robot.team]
+  elif obj == "OSwitch":
+    global_obj = obj_state[robot.enemy + 'Switch' + robot.team]
+  else:
+    raise ValueError('Value given for obj is out of range(must be "Scale", "ASwitch" or "OSwitch")')
+  obj_state[global_obj] += 1
+
+def get_obj_location(robot, obj):
   if robot.RID[0] == 0:
     if obj == "Scale":
-      global_obj = obj_state['RScale']
+      return obj_location[red_scale]
     elif obj == "ASwitch":
-      global_obj = obj_state['RSwitchR']
+      return obj_location[redside_red_switch]
     elif obj == "OSwitch":
-      global_obj = obj_state['BSwitchR']
+      return obj_location[blueside_red_switch]
     else:
-      rasie ValueError('Value given for obj is out of range(must be "Scale", "ASwitch" or "OSwitch")')
-  elif robot.RI[0] == 1:
+      raise ValueError('Value given for obj is out of range(must be "Scale", "ASwitch" or "OSwitch")')
+  else:
     if obj == "Scale":
-      global_obj = obj_state['BScale']
+      return obj_location[blue_scale]
     elif obj == "ASwitch":
-      global_obj = obj_state['BSwitchB']
+      return obj_location[blueside_blue_switch]
     elif obj == "OSwitch":
-      global_obj = obj_state['RSwitchB']
+      return obj_location[redside_blue_switch]
     else:
-      rasie ValueError('Value given for obj is out of range(must be "Scale", "ASwitch" or "OSwitch")')
-  obj_state[global_obj] += 1
+      raise ValueError('Value given for obj is out of range(must be "Scale", "ASwitch" or "OSwitch")')
 
 
 def pathfinding(CLocation, TLocation): #CLocation = CurrentLocation, TLocation = TargetLocation
-  return [0, 0] * int(abs(math.sqrt((TLocation[0] - CLocation[0])**2 + (TLocation[1] - CLocation[1])**2)))
+  return [[1, 2]] * int(math.sqrt((TLocation[0] - CLocation[0])**2 + (TLocation[1] - CLocation[1])**2) / 20)
 
 
 #All strategies should be written from the perspective of the red team
 def strategy0(robot): #returns list [d, theta, ObjChange, CubeChange]
-  
   #First convert robot location so that it is representative of the red team
-  if robot.RID[0] == 0:
-      current_location = [644 - robot.location[0], robot.location[1]] #Yes, it's supposed to be 644 not 648
-    else:
-      current_location = robot.location
-
+  current_location = [abs(robot.RID[0]*644 - robot.location[0]), robot.location[1]] #Yes, it's supposed to be 644 not 648
   #Now if the robot doesn't have directions or a task give it one
 
   #If the robot doesn't have a cube find directions to the nearest one
-  if not robot.has_cube and current_directions == [] and current_task == '':
+  if robot.has_cube == False and robot.current_directions == [] and robot.current_task == '':
     #testing each cube and finding the closest one
     closest_cube = ''
     for cube in cube_location:
-      if cube
-      stepsList = pathfinding(current_location, cube_location[cube])
-      distance = len(stepsList)
+      if get_cube_state(robot, cube) <= 0:
+        continue
+      steps_list = pathfinding(current_location, cube_location[cube])
+      distance = len(steps_list)
       if closest_cube == '':
         closest_cube = cube
       elif distance < len(pathfinding(current_location, cube_location[closest_cube])):
         closest_cube = cube
-    robot.current_directions = pathfinding(current_location, cube_location[closest_cube])
+    robot.current_directions = pathfinding(current_location, cube_location[closest_cube]) + [closest_cube]
+    robot.current_task = 'driving'
+    print("No cube configured")
   #If the robot has a cube find directions to the Scaler
-  elif robot.has_cube and current_directions == [] and current_task == '':
+  elif robot.has_cube and robot.current_directions == [] and robot.current_task == '':
+    robot.current_directions = pathfinding(current_location, get_obj_location(robot, 'Scale')) + ['Scale']
+    robot.current_task = 'driving'
+    print("Cube Configured")
 
-  #Now execute on the current directions or tast
+  #Now execute on the current directions or task
 
   #If the robot doesn't have a cube and is picking it up check if it's done
-  if not robot.has_cube and current_task == 'cube'
+  if not robot.has_cube and robot.current_task == 'cube':
     robot.task_timer -= 1
     if robot.task_timer <= 0:
-      robot.has_cube = True
-      set_cube_state(robot, robot.current_directions[-1])
+      cube_exists = set_cube_state(robot, robot.current_directions[-1])
       robot.current_directions = []
       robot.current_task = ''
       robot.task_timer = 0
+      if cube_exists:
+        robot.has_cube = True
+      else:
+        robot.has_cube = False
+    drive_directions = []
+    print("Picking up")
   #If the robot has a cube and is placing it somewhere check if it's done
-  elif robot.has_cube and current_task == 'cube':
+  elif robot.has_cube and robot.current_task == 'cube':
     robot.task_timer -= 1
     if robot.task_timer <= 0:
       robot.has_cube = False
@@ -185,21 +199,28 @@ def strategy0(robot): #returns list [d, theta, ObjChange, CubeChange]
       robot.current_directions = []
       robot.current_task = ''
       robot.task_timer = 0
+    drive_directions = []
+    print("Placing")
+  #If the robot is driving, check whether it will reach it's detinatino in the next second
   elif robot.current_task == 'driving':
-
-  if len(directions) - 3 >= robot.robot_speed / 4:
-    return directions[0 : robot.robot_speed / 4], ['','']
-    robot.current_task = 'driving'
-  else:
-    return directions[0 : len(directions)]
-    if direcions[-2] == 'cube':
-      if
-
-  coordinate_change = [robot.robot_speed, 0]
-  obj_change = 'ScaleR'
-  cube_change = ''
-  field_change = [obj_change, cube_change]
-  return coordinate_change, field_change
+    if len(robot.current_directions) - 1 >= int(robot.robot_speed / 4):
+      drive_directions = robot.current_directions[0 : int(robot.robot_speed / 4)]
+      robot.current_directions = robot.current_directions[int(robot.robot_speed / 4):]
+      robot.current_task = 'driving'
+    else:
+      return robot.current_directions[0 : len(robot.current_directions) - 1]
+      robot.current_directions = robot.current_directions[len(robot.current_directions) - 1:]
+      robot.task = 'cube'
+      if not robot.has_cube:
+        robot.task_timer = robot.pickup_speed
+      elif robot.has_cube and robot.current_directions[-1] == 'Scale':
+        robot.task_timer = robot.scale_speed
+      elif robot.has_cube and robot.current_directions[-1] == 'Switch':
+        robot.task_timer = robot.switch_speed
+      drive_directions = []
+    print("driving")
+  
+  return drive_directions
 
 #Defining all of the robots and a list of the robots  
 R0 = Robot(RID = [0, 0])
@@ -223,6 +244,7 @@ ax.grid(color='black', which='both', linestyle='-', linewidth=.05) #add grid
 #minor ticks are every 18" and major ticks are every 72"
 
 for time in range(GAME_LENGTH): #The code that runs each second
+  print(" \n \n \n ")
   print([robot.location for robot in robot_list])
   if 'red' in globals(): red.remove()
   if 'blue' in globals(): blue.remove()
@@ -230,19 +252,13 @@ for time in range(GAME_LENGTH): #The code that runs each second
   red = ax.scatter([robot.location[0] + 2 for robot in robot_list[:3]], [robot.location[1] + 2 for robot in robot_list[3:]], s = 3, c = 'red')
   blue = ax.scatter([robot.location[0] - 2 for robot in robot_list[3:]], [robot.location[1] - 2 for robot in robot_list[:3]], s = 3, c = 'blue'); plt.pause(1)
   for robot in robot_list:
-    vector, field_change = strategy0(robot) #get the projected movement vector and projected changes to field elements
-    coordinates = convert_to_rect(vector[0], vector[1]) #covert polar vector to rectangular
-    print(coordinates) #print for debugging
-    for index in range(len(robot.location)): #Changes robot location
-      if robot.RID[0] == 0:
-        robot.location[index] = robot.location[index] + coordinates[index]
-      if robot.RID[0] == 1:
-        robot.location[index] = robot.location[index] - coordinates[index]
-    if field_change[0] != '': #Changes field element dictionaries
-      obj_state[field_change[0]] += 1
-    if field_change[1] != '':
-      cube_state[field_change[1]]
-  
+    directions = strategy0(robot) #get the projected movement vector and projected changes to field elements
+    print(robot.team)
+    print(len(directions))
+    # if robot.RID[0] == 1:
+    #   for index in range(len(directions)):
+    #     directions[index][0] = 644 - directions[index][0]
+    #     print(directions[index][0])
 plt.ioff(); plt.show()
     
 

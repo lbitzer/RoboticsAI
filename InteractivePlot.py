@@ -10,8 +10,8 @@ fig, ax = plt.subplots() #make window
 ax.imshow(field, extent = [0, 648, 0 , 320]) #show image with dimensions 648 x 320
 ax.set_xticks(np.arange(0, 648, 48)) #customize tick intervals
 ax.set_yticks(np.arange(0, 320, 48))
-ax.yaxis.set_minor_locator(AutoMinorLocator(6)) #customize minor tick intervals
-ax.xaxis.set_minor_locator(AutoMinorLocator(6))
+ax.yaxis.set_minor_locator(AutoMinorLocator(12)) #customize minor tick intervals
+ax.xaxis.set_minor_locator(AutoMinorLocator(12))
 ax.grid(color='black', which='both', linestyle='-', linewidth=.05) #add grid
 
 
