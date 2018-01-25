@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 
 # set game length in seconds
-GAME_LENGTH = 50  # seconds
+GAME_LENGTH = 2  # seconds
 GAME_TIME_GRANULARITY = 2
 GAME_LENGTH = GAME_LENGTH * GAME_TIME_GRANULARITY
 
@@ -136,11 +136,11 @@ class Robot:
     task_timer = 0
     current_task = ''
     current_directions = []
+    robot_speed = int(144 + np.random.randint(-50, 50))
 
-    def __init__(self, RID, robot_speed=144, scale_speed=6, switch_speed=3, pickup_speed=2,
+    def __init__(self, RID, scale_speed=6, switch_speed=3, pickup_speed=2,
                  has_cube=False):  # contructor,
         self.RID = RID  # RID = Robot ID in form [a,b] where a is team(Blue = 0, Red = 1) and a is bot id(0, 1, or 2)
-        self.robot_speed = int(robot_speed + np.random.randint(-50, 50) / GAME_TIME_GRANULARITY)# inches per second
         self.scale_speed = scale_speed * GAME_TIME_GRANULARITY # seconds
         self.switch_speed = switch_speed  * GAME_TIME_GRANULARITY# seconds
         self.pickup_speed = pickup_speed * GAME_TIME_GRANULARITY # seconds
@@ -241,7 +241,7 @@ def pathfinding(CLocation, TLocation, robot):  # CLocation = CurrentLocation, TL
     horizontal_distance = TLocation[0] - CLocation[0]
     vertical_distance = TLocation[1] - CLocation[1]
     numberofsteps = int(np.ceil(distance / robot.robot_speed))
-    numberofsteps = numberofsteps * int(robot.robot_speed / 4)
+    numberofsteps = numberofsteps * int(np.ceil(robot.robot_speed / 4))
     horizontal_distance_interval = horizontal_distance / numberofsteps
     vertical_distance_interval = vertical_distance / numberofsteps
     steps = []
@@ -370,7 +370,7 @@ for time in range(GAME_LENGTH):  # The code that runs each second
                      [robot.location[1] + 2 for robot in robot_list[3:]], s=3, c='red')
     blue = ax.scatter([robot.location[0] - 2 for robot in robot_list[3:]],
                       [robot.location[1] - 2 for robot in robot_list[:3]], s=3, c='blue');
-    plt.pause(1)
+    plt.pause(1/GAME_TIME_GRANULARITY)
     for robot in robot_list:
         directions = strategy0(robot)  # get the projected movement vector and projected changes to field elements
         if len(directions) > 1:
