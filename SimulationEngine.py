@@ -361,7 +361,7 @@ ax.grid(color='black', which='both', linestyle='-', linewidth=.05)  # add grid
 
 for time in range(GAME_LENGTH):  # The code that runs each second
     print(" \n \n ")
-    print('timestamp = {}'.format(time))
+    print('timestamp = {}/{}'.format(time, GAME_LENGTH))
     print(" \n \n ")
     if 'red' in globals(): red.remove()
     if 'blue' in globals(): blue.remove()
